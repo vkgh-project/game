@@ -15,7 +15,7 @@
       --danger: #ef4444;
       --warning: #f59e0b;
       --neutral: #94a3b8;
-      --impassable: #4b5563;
+      --impassable: #facc15;
       --bg: #0f172a;
       --surface: #111827;
       --surface-2: #1f2937;
@@ -330,8 +330,8 @@
     }
 
     .cell-impassable {
-      background: linear-gradient(135deg, rgba(75, 85, 99, 0.4), rgba(55, 65, 81, 0.3));
-      border-color: rgba(75, 85, 99, 0.5);
+      background: linear-gradient(135deg, rgba(250, 204, 21, 0.45), rgba(234, 179, 8, 0.3));
+      border-color: rgba(250, 204, 21, 0.7);
       cursor: not-allowed;
     }
 
@@ -1063,7 +1063,7 @@
         state.groups.get(orcGroup).creatures.push(creature.id);
       }
 
-      addLog(`🎮 Гра почалась: ${elfCount} ельфів vs ${orcCount} орків (${state.impassablePercent}% препятствий)`, 'gamestate');
+      addLog(`⚔️ Гра почалась: ${elfCount} ельфів vs ${orcCount} орків (${state.impassablePercent}% непрохідної)`, 'gamestate');
     }
 
     function renderBoard() {
@@ -1253,7 +1253,7 @@
       for (const c of state.creatures) {
         if (c.strength <= 0 && c.alive) {
           c.alive = false;
-          addLog(`💀 ${c.type === 'elf' ? '🧙 Ельф' : '🗡️ Орк'} знищений`, 'death');
+          addLog(`☠️ ${c.type === 'elf' ? '🧙 Ельф' : '🗡️ Орк'} вмер.`, 'death');
         }
       }
 
@@ -1265,14 +1265,14 @@
       const orcsAlive = state.creatures.some(c => c.type === 'orc' && c.alive);
 
       if (!elvesAlive) {
-        state.winner = 'Орки 🗡️';
-        state.winReason = 'Ельфи вибиті (знищення)';
+        state.winner = '🗡️ Орки';
+        state.winReason = 'Ельфи знищені.';
         return true;
       }
 
       if (!orcsAlive) {
-        state.winner = 'Ельфи 🧙';
-        state.winReason = 'Орки вибиті (знищення)';
+        state.winner = '🧙 Ельфи';
+        state.winReason = 'Орки знищені.';
         return true;
       }
 
@@ -1284,8 +1284,8 @@
       if (elfPercent >= state.territoryThreshold) {
         state.elfTerritoryCounter++;
         if (state.elfTerritoryCounter >= state.territoryHolds) {
-          state.winner = 'Ельфи 🧙';
-          state.winReason = `Контроль ${Math.round(elfPercent)}% території`;
+          state.winner = '🧙 Ельфи';
+          state.winReason = `Захопили ${Math.round(elfPercent)}% території`;
           return true;
         }
       } else {
@@ -1295,8 +1295,8 @@
       if (orcPercent >= state.territoryThreshold) {
         state.orcTerritoryCounter++;
         if (state.orcTerritoryCounter >= state.territoryHolds) {
-          state.winner = 'Орки 🗡️';
-          state.winReason = `Контроль ${Math.round(orcPercent)}% території`;
+          state.winner = '🗡️ Орки';
+          state.winReason = `Захопили ${Math.round(orcPercent)}% території`;
           return true;
         }
       } else {
@@ -1305,14 +1305,14 @@
 
       if (state.turn >= state.maxTurns) {
         if (elfPercent > orcPercent) {
-          state.winner = 'Ельфи 🧙';
-          state.winReason = `Більше території (${Math.round(elfPercent)}% vs ${Math.round(orcPercent)}%)`;
+          state.winner = '🧙 Ельфи';
+          state.winReason = `Перемога за території (${Math.round(elfPercent)}% vs ${Math.round(orcPercent)}%)`;
         } else if (orcPercent > elfPercent) {
-          state.winner = 'Орки 🗡️';
-          state.winReason = `Більше території (${Math.round(orcPercent)}% vs ${Math.round(elfPercent)}%)`;
+          state.winner = '🗡️ Орки';
+          state.winReason = `Перемога за території (${Math.round(orcPercent)}% vs ${Math.round(elfPercent)}%)`;
         } else {
-          state.winner = 'Нічия 🤝';
-          state.winReason = 'Рівна територія і ліміт ходів';
+          state.winner = '🔔 Нічия';
+          state.winReason = 'Рівна кількість ходів та територій';
         }
         return true;
       }
@@ -1368,7 +1368,7 @@
           if (el) el.disabled = true;
         });
 
-        setStatus('В процесі', 'status-running');
+        setStatus('▶ Гра запущена', 'status-running');
         DOM.statusBadge.classList.add('pulse');
 
         DOM.winnerContainer.style.display = 'none';
@@ -1381,7 +1381,7 @@
       } else if (state.paused) {
         state.paused = false;
         DOM.pauseBtn.textContent = '⏸ Пауза';
-        setStatus('В процесі', 'status-running');
+        setStatus('▶ Гра запущена', 'status-running');
         DOM.statusBadge.classList.add('pulse');
         const speed = Number(DOM.speed.value);
         state.timer = setInterval(simulateTurn, speed);
@@ -1393,7 +1393,7 @@
         state.paused = true;
         clearInterval(state.timer);
         DOM.pauseBtn.textContent = '▶ Продовжити';
-        setStatus('На паузі', 'status-paused');
+        setStatus('⏸ На паузі', 'status-paused');
         DOM.statusBadge.classList.remove('pulse');
       }
     }
