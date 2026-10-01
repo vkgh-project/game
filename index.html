@@ -641,7 +641,6 @@
 </head>
 <body>
   <div class="container">
-    <!-- LEFT SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-section">
         <div class="sidebar-title">🎮 Налаштування гри</div>
@@ -731,14 +730,13 @@
         <div class="info-box">
           <strong>📋 Правила:</strong><br/>
           • Рух: 1 клітка/хід (4 напрямки)<br/>
-          • Взаємодія: -1% сили<br/>
-          • Захоп территорії<br/>
+          • Взаємодія: -20% сили<br/>
+          • Захоп території<br/>
           • Перемога: знищення або територія
         </div>
       </div>
     </aside>
 
-    <!-- CENTER GAME BOARD -->
     <main class="main">
       <div class="game-header">
         <div class="game-title">⚔️ Territory Wars</div>
@@ -752,7 +750,6 @@
       </div>
     </main>
 
-    <!-- RIGHT STATS PANEL -->
     <aside class="stats-panel">
       <div class="stat-card">
         <span class="stat-label">🧙 Ельфи</span>
@@ -836,7 +833,6 @@
   </div>
 
   <script>
-    // ===== CONSTANTS =====
     const TERRITORY_TYPES = {
       ELF: 'elf',
       ORC: 'orc',
@@ -857,7 +853,8 @@
       TURN_LIMIT: 'turn_limit'
     };
 
-    // ===== STATE MANAGEMENT =====
+    const INTERACTION_DAMAGE = 20;
+
     const state = {
       creatures: [],
       territory: [],
@@ -921,7 +918,6 @@
       winnerReason: document.getElementById('winnerReason')
     };
 
-    // ===== UTILITY FUNCTIONS =====
     function uid() {
       return Math.random().toString(36).slice(2, 9);
     }
@@ -955,7 +951,6 @@
       DOM.statusBadge.innerHTML = `<span>●</span> ${text}`;
     }
 
-    // ===== CREATURE & GROUP LOGIC =====
     function createCreature(type, x, y, groupId) {
       return {
         id: uid(),
@@ -1004,12 +999,10 @@
 
       DOM.maxTurnDisplay.textContent = state.maxTurns;
 
-      // Ініціалізація території
       const midX = Math.floor(state.width / 2);
       const impassableCount = Math.floor((state.width * state.height * state.impassablePercent) / 100);
       const impassablePositions = new Set();
 
-      // Генерація непрохідних клітинок
       while (impassablePositions.size < impassableCount) {
         const x = randomInt(state.width);
         const y = randomInt(state.height);
@@ -1032,7 +1025,6 @@
         }
       }
 
-      // Розміщення ельфів у лівій половині
       const elfGroup = uid();
       state.groups.set(elfGroup, { id: elfGroup, type: 'elf', creatures: [] });
 
@@ -1052,7 +1044,6 @@
         state.groups.get(elfGroup).creatures.push(creature.id);
       }
 
-      // Розміщення орків у правій половині
       const orcGroup = uid();
       state.groups.set(orcGroup, { id: orcGroup, type: 'orc', creatures: [] });
 
@@ -1140,7 +1131,6 @@
       DOM.groupCount.textContent = state.groups.size;
     }
 
-    // ===== MOVEMENT LOGIC =====
     function getAvailableDirections(x, y) {
       const directions = [];
       const moves = [
@@ -1208,7 +1198,6 @@
           creature.x = best.nx;
           creature.y = best.ny;
 
-          // Захоп території
           const terrain = getTerritoryAt(creature.x, creature.y);
           const expectedType = creature.type === 'elf' ? TERRITORY_TYPES.ELF : TERRITORY_TYPES.ORC;
           if (terrain.type !== expectedType && terrain.type !== TERRITORY_TYPES.IMPASSABLE) {
@@ -1218,7 +1207,6 @@
       }
     }
 
-    // ===== INTERACTION LOGIC =====
     function findAdjacentPairs() {
       const pairs = [];
       const checked = new Set();
@@ -1258,8 +1246,8 @@
       const pairs = findAdjacentPairs();
 
       for (const { creature, adjacent } of pairs) {
-        creature.strength = Math.max(0, creature.strength - 1);
-        adjacent.strength = Math.max(0, adjacent.strength - 1);
+        creature.strength = Math.max(0, creature.strength - INTERACTION_DAMAGE);
+        adjacent.strength = Math.max(0, adjacent.strength - INTERACTION_DAMAGE);
       }
 
       for (const c of state.creatures) {
@@ -1272,12 +1260,10 @@
       state.creatures = state.creatures.filter(c => c.alive);
     }
 
-    // ===== GAME LOGIC =====
     function checkGameOver() {
       const elvesAlive = state.creatures.some(c => c.type === 'elf' && c.alive);
       const orcsAlive = state.creatures.some(c => c.type === 'orc' && c.alive);
 
-      // Перевірка знищення
       if (!elvesAlive) {
         state.winner = 'Орки 🗡️';
         state.winReason = 'Ельфи вибиті (знищення)';
@@ -1290,7 +1276,6 @@
         return true;
       }
 
-      // Перевірка контролю території
       const terrStats = getTerritoryStats();
       const totalPassable = state.width * state.height - terrStats[TERRITORY_TYPES.IMPASSABLE];
       const elfPercent = (terrStats[TERRITORY_TYPES.ELF] / totalPassable) * 100;
@@ -1318,7 +1303,6 @@
         state.orcTerritoryCounter = 0;
       }
 
-      // Перевірка ліміту ходів
       if (state.turn >= state.maxTurns) {
         if (elfPercent > orcPercent) {
           state.winner = 'Ельфи 🧙';
@@ -1366,7 +1350,6 @@
       }
     }
 
-    // ===== EVENT HANDLERS =====
     function startSimulation() {
       if (state.finished) return;
 
@@ -1467,7 +1450,6 @@
       DOM.impassableValue.textContent = e.target.value;
     });
 
-    // ===== INITIALIZE =====
     resetGame();
   </script>
 </body>
