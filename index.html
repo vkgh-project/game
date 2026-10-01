@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚔️ Territory Wars: Elf vs Orc</title>
+  <style>
+    :root {
+      --primary: #7dd3fc;
+      --primary-dark: #0369a1;
+      --secondary: #fca5a5;
+      --secondary-dark: #7f1d1d;
+      --accent: #facc15;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --neutral: #94a3b8;
+      --impassable: #4b5563;
+      --bg: #0f172a;
+      --surface: #111827;
+      --surface-2: #1f2937;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --border: rgba(148, 163, 184, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      background: linear-gradient(135deg, #020817 0%, #0f172a 50%, #1a1f35 100%);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+    }
+
+    .container {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 320px 1fr 360px;
+      gap: 16px;
+      padding: 16px;
+    }
+
+    /* ===== LEFT SIDEBAR ===== */
+    .sidebar {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow-y: auto;
+    }
+
+    .sidebar-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sidebar-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    input[type="number"],
+    input[type="range"],
+    select {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(31, 41, 55, 0.6);
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    input[type="number"]:focus,
+    input[type="range"]:focus,
+    select:focus {
+      border-color: var(--primary);
+      background: rgba(31, 41, 55, 0.9);
+      box-shadow: 0 0 8px rgba(125, 211, 252, 0.2);
+    }
+
+    select {
+      cursor: pointer;
+    }
+
+    .range-value {
+      font-size: 12px;
+      color: var(--primary);
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    button {
+      padding: 10px 12px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    button:not(:disabled):hover {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+    }
+
+    button:not(:disabled):active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #7dd3fc, #38bdf8);
+      color: #111827;
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #fca5a5, #f87171);
+      color: #111827;
+    }
+
+    .btn-tertiary {
+      background: rgba(148, 163, 184, 0.2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-tertiary:hover:not(:disabled) {
+      background: rgba(148, 163, 184, 0.3);
+      border-color: var(--muted);
+    }
+
+    .btn-small {
+      padding: 6px 10px;
+      font-size: 11px;
+    }
+
+    .btn-full {
+      grid-column: 1 / -1;
+    }
+
+    .info-box {
+      background: rgba(31, 41, 55, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ===== CENTER GAME BOARD ===== */
+    .main {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .game-header {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .game-title {
+      font-size: 20px;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .game-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-running {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .status-paused {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .status-finished {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .status-idle {
+      background: rgba(148, 163, 184, 0.15);
+      color: var(--muted);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    .pulse {
+      animation: pulse-animation 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-animation {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .board-container {
+      flex: 1;
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+    }
+
+    .board {
+      display: inline-grid;
+      gap: 3px;
+      background: rgba(15, 23, 42, 0.8);
+      padding: 12px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .cell {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      background: linear-gradient(135deg, #0b1220, #162033);
+      font-size: 9px;
+      font-weight: 700;
+    }
+
+    .cell:hover:not(.cell-impassable) {
+      border-color: rgba(148, 163, 184, 0.4);
+      transform: scale(1.05);
+    }
+
+    .cell-elf {
+      background: linear-gradient(135deg, rgba(125, 211, 252, 0.2), rgba(125, 211, 252, 0.05));
+      border-color: rgba(125, 211, 252, 0.3);
+    }
+
+    .cell-orc {
+      background: linear-gradient(135deg, rgba(252, 165, 165, 0.2), rgba(252, 165, 165, 0.05));
+      border-color: rgba(252, 165, 165, 0.3);
+    }
+
+    .cell-neutral {
+      background: linear-gradient(135deg, rgba(148, 163, 184, 0.12), rgba(148, 163, 184, 0.02));
+      border-color: rgba(148, 163, 184, 0.2);
+    }
+
+    .cell-impassable {
+      background: linear-gradient(135deg, rgba(75, 85, 99, 0.4), rgba(55, 65, 81, 0.3));
+      border-color: rgba(75, 85, 99, 0.5);
+      cursor: not-allowed;
+    }
+
+    .cell-impassable::after {
+      content: '▓';
+      color: var(--impassable);
+      font-weight: 900;
+      opacity: 0.6;
+    }
+
+    .creature {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: 900;
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+      animation: spawn 0.3s ease-out;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    @keyframes spawn {
+      0% {
+        transform: scale(0.5);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .creature.elf {
+      background: linear-gradient(135deg, rgba(125, 211, 252, 0.4), rgba(56, 189, 248, 0.25));
+      color: var(--primary);
+      text-shadow: 0 0 3px rgba(125, 211, 252, 0.6);
+    }
+
+    .creature.orc {
+      background: linear-gradient(135deg, rgba(252, 165, 165, 0.4), rgba(248, 113, 113, 0.25));
+      color: var(--secondary);
+      text-shadow: 0 0 3px rgba(252, 165, 165, 0.6);
+    }
+
+    /* ===== RIGHT STATS PANEL ===== */
+    .stats-panel {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .stat-card {
+      background: rgba(31, 41, 55, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+
+    .stat-label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .stat-value.elf {
+      color: var(--primary);
+      text-shadow: 0 0 8px rgba(125, 211, 252, 0.3);
+    }
+
+    .stat-value.orc {
+      color: var(--secondary);
+      text-shadow: 0 0 8px rgba(252, 165, 165, 0.3);
+    }
+
+    .stat-unit {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .stat-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(148, 163, 184, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .stat-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+
+    .stat-bar-fill.orc {
+      background: linear-gradient(90deg, var(--secondary), var(--warning));
+    }
+
+    .stat-extra {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .territory-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .territory-item {
+      padding: 8px;
+      border-radius: 8px;
+      background: rgba(31, 41, 55, 0.7);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .territory-item.elf {
+      border-color: rgba(125, 211, 252, 0.3);
+      background: rgba(125, 211, 252, 0.1);
+    }
+
+    .territory-item.orc {
+      border-color: rgba(252, 165, 165, 0.3);
+      background: rgba(252, 165, 165, 0.1);
+    }
+
+    .territory-item.neutral {
+      border-color: rgba(148, 163, 184, 0.2);
+      background: rgba(148, 163, 184, 0.05);
+    }
+
+    .territory-item-label {
+      font-size: 9px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .territory-item-value {
+      font-size: 14px;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+
+    .log-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .log-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .log-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    .log-item {
+      padding: 6px 8px;
+      background: rgba(31, 41, 55, 0.5);
+      border-left: 2px solid var(--primary);
+      border-radius: 4px;
+      font-size: 10px;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .log-item.interaction {
+      border-left-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .log-item.death {
+      border-left-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .log-item.territory {
+      border-left-color: var(--primary);
+    }
+
+    .log-item.gamestate {
+      border-left-color: var(--warning);
+      color: var(--warning);
+    }
+
+    .winner-box {
+      background: linear-gradient(135deg, rgba(250, 204, 21, 0.15), rgba(250, 204, 21, 0.05));
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      animation: pulse-animation 1.2s ease-in-out infinite;
+    }
+
+    .winner-label {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    .winner-name {
+      font-size: 18px;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--accent), var(--primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .winner-reason {
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(148, 163, 184, 0.08);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.5);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1600px) {
+      .container {
+        grid-template-columns: 280px 1fr 320px;
+      }
+
+      .cell {
+        width: 35px;
+        height: 35px;
+        font-size: 8px;
+      }
+    }
+
+    @media (max-width: 1200px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar,
+      .stats-panel {
+        max-height: 140px;
+      }
+
+      .cell {
+        width: 30px;
+        height: 30px;
+      }
+
+      .button-group {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">🎮 Налаштування гри</div>
+
+        <div class="control-group">
+          <label for="elfCount">Ельфи</label>
+          <input id="elfCount" type="number" min="1" max="30" value="8" />
+        </div>
+
+        <div class="control-group">
+          <label for="orcCount">Орки</label>
+          <input id="orcCount" type="number" min="1" max="30" value="8" />
+        </div>
+
+        <div class="control-group">
+          <label for="boardWidth">Ширина території</label>
+          <input id="boardWidth" type="number" min="10" max="50" value="24" />
+        </div>
+
+        <div class="control-group">
+          <label for="boardHeight">Висота території</label>
+          <input id="boardHeight" type="number" min="8" max="40" value="14" />
+        </div>
+
+        <div class="control-group">
+          <label for="impassablePercent">Непрохідна територія (%)</label>
+          <input id="impassablePercent" type="range" min="0" max="40" step="5" value="15" />
+          <div class="range-value">
+            <span id="impassableValue">15</span>%
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label for="maxTurns">Макс ходів</label>
+          <input id="maxTurns" type="number" min="10" max="500" value="150" />
+        </div>
+
+        <div class="control-group">
+          <label for="territoryThreshold">Порог території (%)</label>
+          <input id="territoryThreshold" type="number" min="10" max="90" value="60" />
+        </div>
+
+        <div class="control-group">
+          <label for="territoryHolds">Ходів утримання</label>
+          <input id="territoryHolds" type="number" min="1" max="50" value="10" />
+        </div>
+
+        <div class="control-group">
+          <label for="elfBehavior">Поведінка ельфів</label>
+          <select id="elfBehavior">
+            <option value="attack">🗡️ Attack</option>
+            <option value="defend">🛡️ Defend</option>
+            <option value="explore">🔍 Explore</option>
+            <option value="capture" selected>🚩 Capture</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="orcBehavior">Поведінка орків</label>
+          <select id="orcBehavior">
+            <option value="attack">🗡️ Attack</option>
+            <option value="defend">🛡️ Defend</option>
+            <option value="explore">🔍 Explore</option>
+            <option value="capture">🚩 Capture</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="speed">Швидкість</label>
+          <input id="speed" type="range" min="100" max="1000" step="50" value="400" />
+          <div class="range-value">
+            <span id="speedValue">400</span> мс
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="button-group">
+          <button id="startBtn" class="btn-primary btn-small">▶ Старт</button>
+          <button id="pauseBtn" class="btn-tertiary btn-small" disabled>⏸ Пауза</button>
+        </div>
+        <button id="stepBtn" class="btn-tertiary btn-small btn-full" disabled>⏭ Один хід</button>
+        <button id="resetBtn" class="btn-secondary btn-small btn-full">↻ Скинути</button>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="info-box">
+          <strong>📋 Правила:</strong><br/>
+          • Рух: 1 клітка/хід (4 напрямки)<br/>
+          • Взаємодія: -1% сили<br/>
+          • Захоп территорії<br/>
+          • Перемога: знищення або територія
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTER GAME BOARD -->
+    <main class="main">
+      <div class="game-header">
+        <div class="game-title">⚔️ Territory Wars</div>
+        <div id="statusBadge" class="game-status-badge status-idle">
+          <span>●</span> Готово
+        </div>
+      </div>
+
+      <div class="board-container">
+        <div id="board" class="board"></div>
+      </div>
+    </main>
+
+    <!-- RIGHT STATS PANEL -->
+    <aside class="stats-panel">
+      <div class="stat-card">
+        <span class="stat-label">🧙 Ельфи</span>
+        <div class="stat-value elf">
+          <span id="elfCountDisplay">0</span>
+          <span class="stat-unit">жив.</span>
+        </div>
+        <div class="stat-bar">
+          <div id="elfBar" class="stat-bar-fill" style="width: 0%;"></div>
+        </div>
+        <div class="stat-extra">
+          <span>Середня сила:</span>
+          <span id="elfAvgStr">0%</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <span class="stat-label">🗡️ Орки</span>
+        <div class="stat-value orc">
+          <span id="orcCountDisplay">0</span>
+          <span class="stat-unit">жив.</span>
+        </div>
+        <div class="stat-bar">
+          <div id="orcBar" class="stat-bar-fill orc" style="width: 0%;"></div>
+        </div>
+        <div class="stat-extra">
+          <span>Середня сила:</span>
+          <span id="orcAvgStr">0%</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <span class="stat-label">🗺️ Територія</span>
+        <div class="territory-grid">
+          <div class="territory-item elf">
+            <div class="territory-item-label">Ельфи</div>
+            <div class="territory-item-value elf" id="elfTerritory">0</div>
+          </div>
+          <div class="territory-item neutral">
+            <div class="territory-item-label">Нейтр.</div>
+            <div class="territory-item-value" id="neutralTerritory">0</div>
+          </div>
+          <div class="territory-item orc">
+            <div class="territory-item-label">Орки</div>
+            <div class="territory-item-value orc" id="orcTerritory">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <span class="stat-label">📊 Статистика</span>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+          <div>
+            <div class="stat-label" style="margin-bottom: 4px; font-size: 10px;">Хід</div>
+            <div style="font-size: 18px; font-weight: 700; color: var(--primary);">
+              <span id="turnDisplay">0</span>/<span id="maxTurnDisplay">150</span>
+            </div>
+          </div>
+          <div>
+            <div class="stat-label" style="margin-bottom: 4px; font-size: 10px;">Групи</div>
+            <div style="font-size: 18px; font-weight: 700; color: var(--accent);">
+              <span id="groupCount">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="winnerContainer" style="display: none;">
+        <div class="winner-box">
+          <div class="winner-label">🏆 Переможець</div>
+          <div class="winner-name" id="winnerName">—</div>
+          <div class="winner-reason" id="winnerReason">—</div>
+        </div>
+      </div>
+
+      <div class="log-section">
+        <div class="log-title">📝 Журнал подій</div>
+        <div id="eventLog" class="log-list"></div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    // ===== CONSTANTS =====
+    const TERRITORY_TYPES = {
+      ELF: 'elf',
+      ORC: 'orc',
+      NEUTRAL: 'neutral',
+      IMPASSABLE: 'impassable'
+    };
+
+    const BEHAVIOR_MODES = {
+      ATTACK: 'attack',
+      DEFEND: 'defend',
+      EXPLORE: 'explore',
+      CAPTURE: 'capture'
+    };
+
+    const WIN_REASONS = {
+      ELIMINATION: 'elimination',
+      TERRITORY: 'territory_control',
+      TURN_LIMIT: 'turn_limit'
+    };
+
+    // ===== STATE MANAGEMENT =====
+    const state = {
+      creatures: [],
+      territory: [],
+      groups: new Map(),
+      width: 24,
+      height: 14,
+      running: false,
+      paused: false,
+      turn: 0,
+      maxTurns: 150,
+      finished: false,
+      winner: null,
+      winReason: null,
+      timer: null,
+      logs: [],
+      maxLogs: 8,
+      impassablePercent: 15,
+      territoryThreshold: 60,
+      territoryHolds: 10,
+      elfBehavior: BEHAVIOR_MODES.CAPTURE,
+      orcBehavior: BEHAVIOR_MODES.ATTACK,
+      elfTerritoryCounter: 0,
+      orcTerritoryCounter: 0
+    };
+
+    const DOM = {
+      board: document.getElementById('board'),
+      elfCountDisplay: document.getElementById('elfCountDisplay'),
+      orcCountDisplay: document.getElementById('orcCountDisplay'),
+      elfBar: document.getElementById('elfBar'),
+      orcBar: document.getElementById('orcBar'),
+      elfAvgStr: document.getElementById('elfAvgStr'),
+      orcAvgStr: document.getElementById('orcAvgStr'),
+      elfTerritory: document.getElementById('elfTerritory'),
+      orcTerritory: document.getElementById('orcTerritory'),
+      neutralTerritory: document.getElementById('neutralTerritory'),
+      turnDisplay: document.getElementById('turnDisplay'),
+      maxTurnDisplay: document.getElementById('maxTurnDisplay'),
+      groupCount: document.getElementById('groupCount'),
+      statusBadge: document.getElementById('statusBadge'),
+      startBtn: document.getElementById('startBtn'),
+      pauseBtn: document.getElementById('pauseBtn'),
+      stepBtn: document.getElementById('stepBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      elfCount: document.getElementById('elfCount'),
+      orcCount: document.getElementById('orcCount'),
+      boardWidth: document.getElementById('boardWidth'),
+      boardHeight: document.getElementById('boardHeight'),
+      impassablePercent: document.getElementById('impassablePercent'),
+      impassableValue: document.getElementById('impassableValue'),
+      maxTurns: document.getElementById('maxTurns'),
+      territoryThreshold: document.getElementById('territoryThreshold'),
+      territoryHolds: document.getElementById('territoryHolds'),
+      elfBehavior: document.getElementById('elfBehavior'),
+      orcBehavior: document.getElementById('orcBehavior'),
+      speed: document.getElementById('speed'),
+      speedValue: document.getElementById('speedValue'),
+      eventLog: document.getElementById('eventLog'),
+      winnerContainer: document.getElementById('winnerContainer'),
+      winnerName: document.getElementById('winnerName'),
+      winnerReason: document.getElementById('winnerReason')
+    };
+
+    // ===== UTILITY FUNCTIONS =====
+    function uid() {
+      return Math.random().toString(36).slice(2, 9);
+    }
+
+    function randomInt(max) {
+      return Math.floor(Math.random() * max);
+    }
+
+    function clamp(val, min, max) {
+      return Math.min(Math.max(val, min), max);
+    }
+
+    function distance(x1, y1, x2, y2) {
+      return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+    }
+
+    function addLog(message, type = 'default') {
+      state.logs.unshift({ message, type, turn: state.turn });
+      if (state.logs.length > state.maxLogs) state.logs.pop();
+      renderLog();
+    }
+
+    function renderLog() {
+      DOM.eventLog.innerHTML = state.logs
+        .map(log => `<div class="log-item ${log.type}"><strong>[${log.turn}]</strong> ${log.message}</div>`)
+        .join('');
+    }
+
+    function setStatus(text, statusClass) {
+      DOM.statusBadge.className = `game-status-badge ${statusClass}`;
+      DOM.statusBadge.innerHTML = `<span>●</span> ${text}`;
+    }
+
+    // ===== CREATURE & GROUP LOGIC =====
+    function createCreature(type, x, y, groupId) {
+      return {
+        id: uid(),
+        type,
+        x,
+        y,
+        strength: 100,
+        alive: true,
+        groupId
+      };
+    }
+
+    function getTerritoryAt(x, y) {
+      return state.territory.find(t => t.x === x && t.y === y);
+    }
+
+    function getTerritoryStats() {
+      const stats = {};
+      for (const type of Object.values(TERRITORY_TYPES)) {
+        stats[type] = state.territory.filter(t => t.type === type).length;
+      }
+      return stats;
+    }
+
+    function isPassable(x, y) {
+      if (x < 0 || x >= state.width || y < 0 || y >= state.height) return false;
+      const terrain = getTerritoryAt(x, y);
+      return terrain && terrain.type !== TERRITORY_TYPES.IMPASSABLE;
+    }
+
+    function initializeGame() {
+      state.creatures = [];
+      state.territory = [];
+      state.groups.clear();
+
+      state.width = clamp(Number(DOM.boardWidth.value), 10, 50);
+      state.height = clamp(Number(DOM.boardHeight.value), 8, 40);
+      state.impassablePercent = clamp(Number(DOM.impassablePercent.value), 0, 40);
+      state.maxTurns = clamp(Number(DOM.maxTurns.value), 10, 500);
+      state.territoryThreshold = clamp(Number(DOM.territoryThreshold.value), 10, 90);
+      state.territoryHolds = clamp(Number(DOM.territoryHolds.value), 1, 50);
+      state.elfBehavior = DOM.elfBehavior.value;
+      state.orcBehavior = DOM.orcBehavior.value;
+      state.elfTerritoryCounter = 0;
+      state.orcTerritoryCounter = 0;
+
+      DOM.maxTurnDisplay.textContent = state.maxTurns;
+
+      // Ініціалізація території
+      const midX = Math.floor(state.width / 2);
+      const impassableCount = Math.floor((state.width * state.height * state.impassablePercent) / 100);
+      const impassablePositions = new Set();
+
+      // Генерація непрохідних клітинок
+      while (impassablePositions.size < impassableCount) {
+        const x = randomInt(state.width);
+        const y = randomInt(state.height);
+        impassablePositions.add(`${x},${y}`);
+      }
+
+      for (let y = 0; y < state.height; y++) {
+        for (let x = 0; x < state.width; x++) {
+          let terrType = TERRITORY_TYPES.NEUTRAL;
+
+          if (impassablePositions.has(`${x},${y}`)) {
+            terrType = TERRITORY_TYPES.IMPASSABLE;
+          } else if (x < midX) {
+            terrType = TERRITORY_TYPES.ELF;
+          } else if (x > midX) {
+            terrType = TERRITORY_TYPES.ORC;
+          }
+
+          state.territory.push({ x, y, type: terrType });
+        }
+      }
+
+      // Розміщення ельфів у лівій половині
+      const elfGroup = uid();
+      state.groups.set(elfGroup, { id: elfGroup, type: 'elf', creatures: [] });
+
+      const elfCount = clamp(Number(DOM.elfCount.value), 1, 30);
+      for (let i = 0; i < elfCount; i++) {
+        let x, y;
+        let placed = false;
+        while (!placed) {
+          x = randomInt(Math.floor(state.width / 2));
+          y = randomInt(state.height);
+          const occupied = state.creatures.some(c => c.x === x && c.y === y && c.alive);
+          const terrain = getTerritoryAt(x, y);
+          if (!occupied && terrain && isPassable(x, y)) placed = true;
+        }
+        const creature = createCreature('elf', x, y, elfGroup);
+        state.creatures.push(creature);
+        state.groups.get(elfGroup).creatures.push(creature.id);
+      }
+
+      // Розміщення орків у правій половині
+      const orcGroup = uid();
+      state.groups.set(orcGroup, { id: orcGroup, type: 'orc', creatures: [] });
+
+      const orcCount = clamp(Number(DOM.orcCount.value), 1, 30);
+      for (let i = 0; i < orcCount; i++) {
+        let x, y;
+        let placed = false;
+        while (!placed) {
+          x = Math.floor(state.width / 2) + randomInt(Math.ceil(state.width / 2));
+          y = randomInt(state.height);
+          const occupied = state.creatures.some(c => c.x === x && c.y === y && c.alive);
+          const terrain = getTerritoryAt(x, y);
+          if (!occupied && terrain && isPassable(x, y)) placed = true;
+        }
+        const creature = createCreature('orc', x, y, orcGroup);
+        state.creatures.push(creature);
+        state.groups.get(orcGroup).creatures.push(creature.id);
+      }
+
+      addLog(`🎮 Гра почалась: ${elfCount} ельфів vs ${orcCount} орків (${state.impassablePercent}% препятствий)`, 'gamestate');
+    }
+
+    function renderBoard() {
+      DOM.board.innerHTML = '';
+      DOM.board.style.gridTemplateColumns = `repeat(${state.width}, 40px)`;
+
+      const grid = new Map();
+
+      for (const c of state.creatures) {
+        if (!c.alive) continue;
+        const key = `${c.x},${c.y}`;
+        if (!grid.has(key)) grid.set(key, []);
+        grid.get(key).push(c);
+      }
+
+      for (let y = 0; y < state.height; y++) {
+        for (let x = 0; x < state.width; x++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+
+          const terrain = getTerritoryAt(x, y);
+          if (terrain) {
+            if (terrain.type === TERRITORY_TYPES.ELF) cell.classList.add('cell-elf');
+            else if (terrain.type === TERRITORY_TYPES.ORC) cell.classList.add('cell-orc');
+            else if (terrain.type === TERRITORY_TYPES.NEUTRAL) cell.classList.add('cell-neutral');
+            else if (terrain.type === TERRITORY_TYPES.IMPASSABLE) cell.classList.add('cell-impassable');
+          }
+
+          const occupants = grid.get(`${x},${y}`) || [];
+          if (occupants.length > 0) {
+            const creature = occupants[0];
+            const token = document.createElement('div');
+            token.className = `creature ${creature.type}`;
+            token.textContent = `${creature.type === 'elf' ? 'E' : 'O'}${creature.strength}`;
+            cell.appendChild(token);
+          }
+
+          DOM.board.appendChild(cell);
+        }
+      }
+    }
+
+    function updateStats() {
+      const elves = state.creatures.filter(c => c.alive && c.type === 'elf');
+      const orcs = state.creatures.filter(c => c.alive && c.type === 'orc');
+
+      const elfAvgStr = elves.length > 0 ? Math.round(elves.reduce((a, c) => a + c.strength, 0) / elves.length) : 0;
+      const orcAvgStr = orcs.length > 0 ? Math.round(orcs.reduce((a, c) => a + c.strength, 0) / orcs.length) : 0;
+
+      const maxCount = Math.max(elves.length, orcs.length) || 1;
+      const terrStats = getTerritoryStats();
+
+      DOM.elfCountDisplay.textContent = elves.length;
+      DOM.orcCountDisplay.textContent = orcs.length;
+      DOM.elfBar.style.width = (elves.length / maxCount) * 100 + '%';
+      DOM.orcBar.style.width = (orcs.length / maxCount) * 100 + '%';
+      DOM.elfAvgStr.textContent = elfAvgStr + '%';
+      DOM.orcAvgStr.textContent = orcAvgStr + '%';
+
+      DOM.elfTerritory.textContent = terrStats[TERRITORY_TYPES.ELF];
+      DOM.orcTerritory.textContent = terrStats[TERRITORY_TYPES.ORC];
+      DOM.neutralTerritory.textContent = terrStats[TERRITORY_TYPES.NEUTRAL];
+
+      DOM.turnDisplay.textContent = state.turn;
+      DOM.groupCount.textContent = state.groups.size;
+    }
+
+    // ===== MOVEMENT LOGIC =====
+    function getAvailableDirections(x, y) {
+      const directions = [];
+      const moves = [
+        { dx: 0, dy: -1, name: '↑' },
+        { dx: 0, dy: 1, name: '↓' },
+        { dx: -1, dy: 0, name: '←' },
+        { dx: 1, dy: 0, name: '→' }
+      ];
+
+      for (const move of moves) {
+        const nx = x + move.dx;
+        const ny = y + move.dy;
+
+        if (isPassable(nx, ny)) {
+          const occupied = state.creatures.some(c => c.x === nx && c.y === ny && c.alive);
+          if (!occupied) {
+            directions.push({ nx, ny, ...move });
+          }
+        }
+      }
+
+      return directions;
+    }
+
+    function scoreDirection(creature, direction, behavior) {
+      const { nx, ny } = direction;
+      const terrain = getTerritoryAt(nx, ny);
+      let score = Math.random() * 5;
+
+      if (behavior === BEHAVIOR_MODES.ATTACK) {
+        const enemies = state.creatures.filter(c => c.type !== creature.type && c.alive);
+        if (enemies.length > 0) {
+          const closest = enemies.reduce((prev, curr) =>
+            distance(nx, ny, prev.x, prev.y) < distance(nx, ny, curr.x, curr.y) ? prev : curr
+          );
+          const dist = distance(nx, ny, closest.x, closest.y);
+          score += Math.max(0, 50 - dist * 5);
+        }
+      } else if (behavior === BEHAVIOR_MODES.DEFEND) {
+        if (creature.type === 'elf' && terrain.type === TERRITORY_TYPES.ELF) score += 40;
+        if (creature.type === 'orc' && terrain.type === TERRITORY_TYPES.ORC) score += 40;
+      } else if (behavior === BEHAVIOR_MODES.EXPLORE) {
+        score = Math.random() * 10;
+      } else if (behavior === BEHAVIOR_MODES.CAPTURE) {
+        if (terrain.type !== (creature.type === 'elf' ? TERRITORY_TYPES.ELF : TERRITORY_TYPES.ORC)) {
+          score += 25;
+        }
+        if (terrain.type === TERRITORY_TYPES.NEUTRAL) score += 15;
+      }
+
+      return score;
+    }
+
+    function moveCreatures() {
+      const alive = state.creatures.filter(c => c.alive);
+
+      for (const creature of alive) {
+        const available = getAvailableDirections(creature.x, creature.y);
+
+        if (available.length > 0) {
+          const behavior = creature.type === 'elf' ? state.elfBehavior : state.orcBehavior;
+          const scored = available.map(d => ({ ...d, score: scoreDirection(creature, d, behavior) }));
+          const best = scored.reduce((prev, curr) => prev.score > curr.score ? prev : curr);
+
+          creature.x = best.nx;
+          creature.y = best.ny;
+
+          // Захоп території
+          const terrain = getTerritoryAt(creature.x, creature.y);
+          const expectedType = creature.type === 'elf' ? TERRITORY_TYPES.ELF : TERRITORY_TYPES.ORC;
+          if (terrain.type !== expectedType && terrain.type !== TERRITORY_TYPES.IMPASSABLE) {
+            terrain.type = expectedType;
+          }
+        }
+      }
+    }
+
+    // ===== INTERACTION LOGIC =====
+    function findAdjacentPairs() {
+      const pairs = [];
+      const checked = new Set();
+
+      for (const creature of state.creatures) {
+        if (!creature.alive) continue;
+
+        const neighbors = [
+          { dx: 0, dy: -1 },
+          { dx: 0, dy: 1 },
+          { dx: -1, dy: 0 },
+          { dx: 1, dy: 0 }
+        ];
+
+        for (const neighbor of neighbors) {
+          const nx = creature.x + neighbor.dx;
+          const ny = creature.y + neighbor.dy;
+
+          const adjacent = state.creatures.find(
+            c => c.x === nx && c.y === ny && c.alive && c.type !== creature.type
+          );
+
+          if (adjacent) {
+            const pairKey = [creature.id, adjacent.id].sort().join('-');
+            if (!checked.has(pairKey)) {
+              pairs.push({ creature, adjacent });
+              checked.add(pairKey);
+            }
+          }
+        }
+      }
+
+      return pairs;
+    }
+
+    function resolveInteractions() {
+      const pairs = findAdjacentPairs();
+
+      for (const { creature, adjacent } of pairs) {
+        creature.strength = Math.max(0, creature.strength - 1);
+        adjacent.strength = Math.max(0, adjacent.strength - 1);
+      }
+
+      for (const c of state.creatures) {
+        if (c.strength <= 0 && c.alive) {
+          c.alive = false;
+          addLog(`💀 ${c.type === 'elf' ? '🧙 Ельф' : '🗡️ Орк'} знищений`, 'death');
+        }
+      }
+
+      state.creatures = state.creatures.filter(c => c.alive);
+    }
+
+    // ===== GAME LOGIC =====
+    function checkGameOver() {
+      const elvesAlive = state.creatures.some(c => c.type === 'elf' && c.alive);
+      const orcsAlive = state.creatures.some(c => c.type === 'orc' && c.alive);
+
+      // Перевірка знищення
+      if (!elvesAlive) {
+        state.winner = 'Орки 🗡️';
+        state.winReason = 'Ельфи вибиті (знищення)';
+        return true;
+      }
+
+      if (!orcsAlive) {
+        state.winner = 'Ельфи 🧙';
+        state.winReason = 'Орки вибиті (знищення)';
+        return true;
+      }
+
+      // Перевірка контролю території
+      const terrStats = getTerritoryStats();
+      const totalPassable = state.width * state.height - terrStats[TERRITORY_TYPES.IMPASSABLE];
+      const elfPercent = (terrStats[TERRITORY_TYPES.ELF] / totalPassable) * 100;
+      const orcPercent = (terrStats[TERRITORY_TYPES.ORC] / totalPassable) * 100;
+
+      if (elfPercent >= state.territoryThreshold) {
+        state.elfTerritoryCounter++;
+        if (state.elfTerritoryCounter >= state.territoryHolds) {
+          state.winner = 'Ельфи 🧙';
+          state.winReason = `Контроль ${Math.round(elfPercent)}% території`;
+          return true;
+        }
+      } else {
+        state.elfTerritoryCounter = 0;
+      }
+
+      if (orcPercent >= state.territoryThreshold) {
+        state.orcTerritoryCounter++;
+        if (state.orcTerritoryCounter >= state.territoryHolds) {
+          state.winner = 'Орки 🗡️';
+          state.winReason = `Контроль ${Math.round(orcPercent)}% території`;
+          return true;
+        }
+      } else {
+        state.orcTerritoryCounter = 0;
+      }
+
+      // Перевірка ліміту ходів
+      if (state.turn >= state.maxTurns) {
+        if (elfPercent > orcPercent) {
+          state.winner = 'Ельфи 🧙';
+          state.winReason = `Більше території (${Math.round(elfPercent)}% vs ${Math.round(orcPercent)}%)`;
+        } else if (orcPercent > elfPercent) {
+          state.winner = 'Орки 🗡️';
+          state.winReason = `Більше території (${Math.round(orcPercent)}% vs ${Math.round(elfPercent)}%)`;
+        } else {
+          state.winner = 'Нічия 🤝';
+          state.winReason = 'Рівна територія і ліміт ходів';
+        }
+        return true;
+      }
+
+      return false;
+    }
+
+    function simulateTurn() {
+      if (!state.running || state.finished) return;
+
+      state.turn++;
+      moveCreatures();
+      resolveInteractions();
+
+      renderBoard();
+      updateStats();
+
+      if (checkGameOver()) {
+        state.finished = true;
+        state.running = false;
+        state.paused = false;
+        clearInterval(state.timer);
+
+        DOM.statusBadge.classList.remove('pulse');
+        setStatus(`Завершено: ${state.winner}`, 'status-finished');
+        DOM.startBtn.disabled = false;
+        DOM.pauseBtn.disabled = true;
+        DOM.stepBtn.disabled = true;
+
+        DOM.winnerContainer.style.display = 'block';
+        DOM.winnerName.textContent = state.winner;
+        DOM.winnerReason.textContent = state.winReason;
+
+        addLog(`🏆 ${state.winner} | ${state.winReason}`, 'gamestate');
+      }
+    }
+
+    // ===== EVENT HANDLERS =====
+    function startSimulation() {
+      if (state.finished) return;
+
+      if (!state.running) {
+        initializeGame();
+        state.running = true;
+        state.paused = false;
+        state.turn = 0;
+        state.logs = [];
+
+        DOM.startBtn.disabled = true;
+        DOM.pauseBtn.disabled = false;
+        DOM.stepBtn.disabled = false;
+        ['elfCount', 'orcCount', 'boardWidth', 'boardHeight', 'impassablePercent', 'maxTurns', 'territoryThreshold', 'territoryHolds', 'elfBehavior', 'orcBehavior'].forEach(id => {
+          const el = DOM[id.charAt(0).toLowerCase() + id.slice(1)];
+          if (el) el.disabled = true;
+        });
+
+        setStatus('В процесі', 'status-running');
+        DOM.statusBadge.classList.add('pulse');
+
+        DOM.winnerContainer.style.display = 'none';
+
+        renderBoard();
+        updateStats();
+
+        const speed = Number(DOM.speed.value);
+        state.timer = setInterval(simulateTurn, speed);
+      } else if (state.paused) {
+        state.paused = false;
+        DOM.pauseBtn.textContent = '⏸ Пауза';
+        setStatus('В процесі', 'status-running');
+        DOM.statusBadge.classList.add('pulse');
+        const speed = Number(DOM.speed.value);
+        state.timer = setInterval(simulateTurn, speed);
+      }
+    }
+
+    function pauseSimulation() {
+      if (state.running && !state.paused) {
+        state.paused = true;
+        clearInterval(state.timer);
+        DOM.pauseBtn.textContent = '▶ Продовжити';
+        setStatus('На паузі', 'status-paused');
+        DOM.statusBadge.classList.remove('pulse');
+      }
+    }
+
+    function stepSimulation() {
+      if (!state.running || !state.paused) return;
+      simulateTurn();
+    }
+
+    function resetGame() {
+      clearInterval(state.timer);
+      state.running = false;
+      state.paused = false;
+      state.finished = false;
+      state.winner = null;
+      state.winReason = null;
+      state.turn = 0;
+      state.logs = [];
+
+      DOM.startBtn.disabled = false;
+      DOM.pauseBtn.disabled = true;
+      DOM.pauseBtn.textContent = '⏸ Пауза';
+      DOM.stepBtn.disabled = true;
+      ['elfCount', 'orcCount', 'boardWidth', 'boardHeight', 'impassablePercent', 'maxTurns', 'territoryThreshold', 'territoryHolds', 'elfBehavior', 'orcBehavior'].forEach(id => {
+        const el = DOM[id.charAt(0).toLowerCase() + id.slice(1)];
+        if (el) el.disabled = false;
+      });
+
+      setStatus('Готово', 'status-idle');
+      DOM.statusBadge.classList.remove('pulse');
+
+      DOM.winnerContainer.style.display = 'none';
+
+      initializeGame();
+      renderBoard();
+      updateStats();
+      renderLog();
+    }
+
+    DOM.startBtn.addEventListener('click', startSimulation);
+    DOM.pauseBtn.addEventListener('click', pauseSimulation);
+    DOM.stepBtn.addEventListener('click', stepSimulation);
+    DOM.resetBtn.addEventListener('click', resetGame);
+
+    DOM.speed.addEventListener('input', e => {
+      DOM.speedValue.textContent = e.target.value;
+      if (state.running && !state.paused) {
+        clearInterval(state.timer);
+        state.timer = setInterval(simulateTurn, Number(e.target.value));
+      }
+    });
+
+    DOM.impassablePercent.addEventListener('input', e => {
+      DOM.impassableValue.textContent = e.target.value;
+    });
+
+    // ===== INITIALIZE =====
+    resetGame();
+  </script>
+</body>
+</html>
